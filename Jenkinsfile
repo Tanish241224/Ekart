@@ -71,20 +71,26 @@ pipeline {
         stage('build and Tag docker image') {
             steps {
                 script {
-                        sh "docker build -t youngminds73/ekart:latest -f docker/Dockerfile ."
+                       sh "docker build -t tanish2412/ekart:latest -f docker/Dockerfile ."
                     }
             }
         }
 
-        stage('Push image to Hub'){
-            steps{
-                script{
-                   withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
-                   sh 'docker login -u tanish2412 -p ${dockerhubpwd}'}
-                   sh 'docker push youngminds73/ekart:latest'
-                }
+       stage('Push image to Hub') {
+          steps {
+             script {
+                  withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
+                                              usernameVariable: 'DOCKER_USER',
+                                              passwordVariable: 'DOCKER_PASS')]) {
+                   sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker tag ekart:latest tanish2412/ekart:latest
+                    docker push tanish2412/ekart:latest
+                    '''
             }
         }
+    }
+}
         stage('EKS and Kubectl configuration'){
             steps{
                 script{
